@@ -15,5 +15,10 @@ To start it again use:
 ```
 java -jar path/to/server/wiremock-standalone-2.4.1.jar --port 3000
 ```
+Once it is running, start your UPS setting `-Dcustom.aerogear.fcm.push.host` parameter with the fake URL:
+```
+path/to/jboss/bin/standalone.sh -b 0.0.0.0 --server-config=standalone-full.xml -Dcustom.aerogear.fcm.push.host=http://localhost:3000/fcm/send
+```
+> Note: in case you need to install a local UPS follow the [installation guide](https://aerogear.org/docs/unifiedpush/ups_userguide/index/#server-installation).
 
-Further steps in progress ...
+And that's it, any notification request will be sent to the mocked backend.
