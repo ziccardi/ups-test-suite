@@ -5,6 +5,9 @@ Some tools and scripts for a UPS test suite
 ### WireMock
 In order to stress-testing we must not talk directly to FCM, but to a mocked server that is provided by [WireMock](http://wiremock.org/) tool.
 
+### Artillery
+[Artillery](https://artillery.io/) is a command-line load testing tool that will send requests directly to UPS's REST API. 
+
 ## Usage
 First step is to install and startp up the mocked FCM server. In order to do it, `cd` to the path where you want to install it and run:
 ```
@@ -22,3 +25,13 @@ path/to/jboss/bin/standalone.sh -b 0.0.0.0 --server-config=standalone-full.xml -
 > Note: in case you need to install a local UPS follow the [installation guide](https://aerogear.org/docs/unifiedpush/ups_userguide/index/#server-installation).
 
 And that's it, any notification request will be sent to the mocked backend.
+
+Next step is run the actual load tests. Firstly install Artillery:
+```
+npm install -g artillery
+```
+Then download the ups-artillery.yml file and simply run it:
+```
+artillery run ups-artillery.yml
+```
+> Note: modify the YAML file the way it suits your spec. Authorization header must be filled with "appId:secret" b64 encoded. More info in the [artillery documentation](https://artillery.io/docs/script_reference.html).
