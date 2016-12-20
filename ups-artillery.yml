@@ -1,0 +1,27 @@
+config:
+  target: 'http://localhost:8080/ag-push'
+  phases:
+    - duration: 60
+      arrivalRate: 100
+  defaults:
+    headers:
+      Authorization: Basic ...
+      Accept: "application/json"
+      Content-type: "application/json"
+
+scenarios:
+  - flow:
+    - post:
+        url: "/rest/sender"
+        json: {
+                  "message": {
+                      "alert": "Artillery Test",
+                      "sound": "default"
+                  },
+                  "criteria": {
+                      "alias": [
+                          "alias-1",
+                          "alias-2"
+                      ]
+                  }
+              }
