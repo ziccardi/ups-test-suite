@@ -10,7 +10,7 @@
 
     <dependencies>
 
-        <!-- This section is due to the fact aerogear-push-server is not publised into maven central:
+        <!-- This section is due to the fact aerogear-push-helper is not published into maven central:
              this artifact is downloaded directly from github -->
 
         <dependency>

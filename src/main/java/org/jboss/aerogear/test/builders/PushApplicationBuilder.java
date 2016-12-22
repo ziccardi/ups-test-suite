@@ -7,11 +7,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Created by ziccardi on 20/12/2016.
+ * Builder for push applications
  */
 public class PushApplicationBuilder {
 
+    /**
+     * Temporary push application object used to store values
+     */
     private final PushApplication pushApplication;
+
     private final List<Variant> variants;
 
     private PushApplicationBuilder(final String id, final String name) {
@@ -59,29 +63,6 @@ public class PushApplicationBuilder {
 
     private Variant cloneVariant(Variant variant) throws Exception {
         Variant ret = variant.getClass().newInstance();
-
-//        switch (variant.getType()) {
-//            case ADM:
-//                ret = new AdmVariant();
-//                break;
-//            case ANDROID:
-//                ret = new AndroidVariant();
-//                break;
-//            case IOS:
-//                ret = new iOSVariant();
-//                break;
-//            case SIMPLE_PUSH:
-//                ret = new SimplePushVariant();
-//                break;
-//            case WINDOWS_MPNS:
-//                ret = new WindowsMPNSVariant();
-//                break;
-//            case WINDOWS_WNS:
-//                ret = new WindowsWNSVariant();
-//                break;
-//            default:
-//                throw new IllegalStateException("Unknown variant type: " + variant.getType());
-//        }
 
         BeanUtils.copyProperties(ret, variant);
         return ret;
