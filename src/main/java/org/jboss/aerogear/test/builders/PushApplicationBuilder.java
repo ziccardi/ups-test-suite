@@ -23,12 +23,12 @@ public class PushApplicationBuilder {
         this.pushApplication.setId(id);
         this.pushApplication.setName(name);
 
-        this.variants = new ArrayList<Variant>();
+        this.variants = new ArrayList<>();
     }
 
     private PushApplicationBuilder(final PushApplication pushApplication) {
         this.pushApplication = pushApplication;
-        this.variants = pushApplication.getVariants() != null ? pushApplication.getVariants() : new ArrayList<Variant>();
+        this.variants = pushApplication.getVariants() != null ? pushApplication.getVariants() : new ArrayList<>();
     }
 
     public static PushApplicationBuilder forApplication(final String id, final String name) {
@@ -69,7 +69,7 @@ public class PushApplicationBuilder {
     }
 
     private List<Variant> cloneVariants(List<Variant> variants) throws Exception {
-        List<Variant> ret = new ArrayList<Variant>();
+        List<Variant> ret = new ArrayList<>();
         for (Variant variant : variants) {
             ret.add(cloneVariant(variant));
         }
@@ -77,7 +77,7 @@ public class PushApplicationBuilder {
         return ret;
     }
 
-    public PushApplication build(){
+    public PushApplication build() {
 
         // By contract, built object must be a different object on every invocation
         PushApplication ret = new PushApplication();

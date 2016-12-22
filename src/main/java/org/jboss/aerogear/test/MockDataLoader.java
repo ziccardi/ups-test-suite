@@ -101,7 +101,7 @@ public class MockDataLoader {
          * @param failed if <code>true</code> increments the counter for failed apps creation
          */
         public synchronized  void appElaborated(boolean failed) {
-            System.out.printf("\n");
+            System.out.println();
             if (failed) {
                 currentAppFailed ++;
             } else {
@@ -141,7 +141,7 @@ public class MockDataLoader {
                     throw new IllegalStateException(e);
                 }
             }
-            System.out.printf("\n");
+            System.out.println();
         }
     }
 
