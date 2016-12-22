@@ -1,44 +1,9 @@
 # Unified Push Server Test Suite
 Some tools and scripts for a UPS test suite
 
-## MockData
+## Mocked Data
 
-Buld the software with maven:
-
-```bash
-mvn clean install
-```
-
-uncompress the produced archive in a directory of your choice:
-
-```bash
-tar xvfz target/aerogear-mock-data-loader-1.0-SNAPSHOT-bin.zip
-```
-
-Run the script:
-
-```bash
-aerogear-mock-data-loader-1.0-SNAPSHOT/bin/mock-data-loader.sh -u username -p password --apps 200 --variants 3 --tokens 15000
-```
-
-Running the script without arguments will show an help screen:
-
-```bash
-usage: mock-data-loader.sh -u|--username <username>-u|--password
-                           <password>-a|--apps <TOTAL> -t|--tokens <TOTAL>
-                           -v|--variants <TOTAL> [-c|--clientid <CLIENTID>
-                           -U|--url <UPS URL>]
- -a,--apps <total>          Number of apps to be generated
- -c,--clientid <id>         Client id used to create the apps. Defaults to
-                            <unified-push-server-js>
- -p,--password <password>   Username to be used to authenticate to the UPS
- -t,--tokens <total>        Number of tokens to be generated
- -u,--username <username>   Username to be used to authenticate to the UPS
- -U,--url <UPS URL>         URL to the UPS server. Defaults to
-                            <http://localhost:8080>
- -v,--variants <total>      Number of variants to be generated
-
-```
+A tool to produce mock data (push applications, variants and tokens) can be found into the [ups-test-suite/mock-data-loader](ups-test-suite/mock-data-loader) folder.
 
 ## Automation Tools
 ### WireMock

@@ -7,9 +7,9 @@ import org.jboss.aerogear.unifiedpush.api.iOSVariant;
  */
 public class IOSVariantBuilder extends VariantBuilder<IOSVariantBuilder, iOSVariant> {
 
-    private String passphrase = null;
+    private String passphrase;
     private boolean production = false;
-    private byte[] certificate = null;
+    private byte[] certificate;
 
     IOSVariantBuilder() {
     }
