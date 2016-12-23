@@ -1,13 +1,15 @@
 # Unified Push Server Test Suite
 Some tools and scripts for a UPS test suite
 
-## Mocked Data
-
-A tool to produce mock data (push applications, variants and tokens) can be found into the [ups-test-suite/mock-data-loader](ups-test-suite/mock-data-loader) folder.
-
 ## Automation Tools
+
 ### WireMock
 In order to stress-testing we must not talk directly to FCM, but to a mocked server that is provided by [WireMock](http://wiremock.org/) tool.
+
+### Mocked Data Loader
+
+A tool to produce mock data (push applications, variants and tokens) can be found into the [mock-data-loader](mock-data-loader) folder.
+
 
 ### Artillery
 [Artillery](https://artillery.io/) is a command-line load testing tool that will send requests directly to UPS's REST API. 
