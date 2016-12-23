@@ -1,3 +1,6 @@
+# VSCode specifics
+.vscode
+
 *.class
 
 # Package Files #
