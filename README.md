@@ -27,7 +27,7 @@ To start it again only use:
 ```
 java -jar path/to/server/wiremock-standalone-2.4.1.jar --port 3000
 ```
-
+#### APNs server
 After this, install and run the APNs server following [this instructions](https://github.com/aerogear/mockapns).
 
 Now, before starting UPS you will need to add the APNs Mock Server certificate to your JVM trusted certificates list. In order to do that convert it to DER format
@@ -42,6 +42,7 @@ sudo keytool -importcert -keystore cacerts -storepass changeit -file /path/to/ce
 ```
 > MacOS: run `$ /usr/libexec/java_home` to locate your $JAVA_HOME dir.
 
+#### UPS
 Once the ssl certificate has been added, start your UPS setting `-Dcustom.aerogear.fcm.push.host` and `-Dcustom.aerogear.apns.push.host` with the proper values:
 ```
 path/to/jboss/bin/standalone.sh -b 0.0.0.0 --server-config=standalone-full.xml -Dcustom.aerogear.fcm.push.host=http://localhost:3000/fcm/send -Dcustom.aerogear.apns.push.host=127.0.0.1
@@ -50,6 +51,7 @@ path/to/jboss/bin/standalone.sh -b 0.0.0.0 --server-config=standalone-full.xml -
 
 And that's it, any notification request will be sent to the mocked backend.
 
+#### Run test suite
 Next step is run the actual load tests. Firstly install Artillery:
 ```
 npm install -g artillery
