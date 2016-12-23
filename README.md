@@ -40,6 +40,7 @@ Then go to your JVM home directory and import the ssl certificate into the trust
 cd $JAVA_HOME/jre/lib/security
 sudo keytool -importcert -keystore cacerts -storepass changeit -file /path/to/cert.crt -trustcacerts
 ```
+You will be prompted to confirm it is a trusted certificate, enter `yes`.
 > MacOS: run `$ /usr/libexec/java_home` to locate your $JAVA_HOME dir.
 
 #### UPS
