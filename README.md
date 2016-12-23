@@ -32,7 +32,7 @@ After this, install and run the APNs server following [this instructions](https:
 
 Now, before starting UPS you will need to add the APNs Mock Server certificate to your JVM trusted certificates list. In order to do that convert it to DER format
 ```
-openssl x509 -in path/to/private -out cert.crt -outform DER
+openssl x509 -in path/to/certificate -out cert.crt -outform DER
 ```
 
 Then go to your JVM home directory and import the ssl certificate into the trusted certificates list:
@@ -40,7 +40,7 @@ Then go to your JVM home directory and import the ssl certificate into the trust
 cd $JAVA_HOME/jre/lib/security
 sudo keytool -importcert -keystore cacerts -storepass changeit -file /path/to/cert.crt -trustcacerts
 ```
-> MacOS: run `/usr/libexec/java_home` to locate your $JAVA_HOME dir.
+> MacOS: run `$ /usr/libexec/java_home` to locate your $JAVA_HOME dir.
 
 Once the ssl certificate has been added, start your UPS setting `-Dcustom.aerogear.fcm.push.host` and `-Dcustom.aerogear.apns.push.host` with the proper values:
 ```
