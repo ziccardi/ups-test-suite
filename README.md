@@ -7,7 +7,7 @@ Some tools and scripts for a UPS test suite
 In order to stress-testing we must not talk directly to FCM, but to a mocked server that is provided by [WireMock](http://wiremock.org/) tool.
 
 ### Mock APNs
-Simple server app that emulates the official APNs so stress-testing can be made with iOS devices as well. It has been forked from [aaronlevy's Mock APNS Server](https://github.com/aaronlevy/mockapns)
+In case of iOS devices we need to use a mock of the APNs, in this case provided by [Mock APNS Server](https://github.com/aerogear/mockapns).
 
 ### Mocked Data Loader
 A tool to produce mock data (push applications, variants and tokens) can be found into the [mock-data-loader](mock-data-loader) folder.
@@ -16,22 +16,33 @@ A tool to produce mock data (push applications, variants and tokens) can be foun
 [Artillery](https://artillery.io/) is a command-line load testing tool that will send requests directly to UPS's REST API. 
 
 ## Usage
-First step is to install and start up the mocked FCM server. In order to do it, `cd` to the path where you want to install it and run:
+First step is to install and start up both mocked servers.
+#### FCM server
+Firstly `cd` to the path where you want to install it and simply run the next script, it will create the server inside a folder and start it:
 ```
 bash <(curl https://gist.githubusercontent.com/josemigallas/9577750d09f87aaaa570c64d5ce8b58e/raw/83124a8596c93a862bcaefbb2dad4522c5d60828/Start%2520Up%2520WireMock)
 ```
-This script will create the server and start it.
-To start it again use:
+
+To start it again only use:
 ```
 java -jar path/to/server/wiremock-standalone-2.4.1.jar --port 3000
 ```
-After this, start up the APNs mock server (setup instructions here) by running:
-```
-./apnsmock --cert "/absolute/path/to/certificate"
-```
-> Warning: please mind that mock-apns will start up even if the path or certificate is wrong.
 
-Once both are running, start your UPS setting `-Dcustom.aerogear.fcm.push.host` parameter with the fake FCM URL and `-Dcustom.aerogear.apns.push.host` with the Mock APNs local IP:
+After this, install and run the APNs server following [this instructions](https://github.com/aerogear/mockapns).
+
+Now, before starting UPS you will need to add the APNs Mock Server certificate to your JVM trusted certificates list. In order to do that convert it to DER format
+```
+openssl x509 -in path/to/private -out cert.crt -outform DER
+```
+
+Then go to your JVM home directory and import the ssl certificate into the trusted certificates list:
+```
+cd $JAVA_HOME/jre/lib/security
+sudo keytool -importcert -keystore cacerts -storepass changeit -file /path/to/cert.crt -trustcacerts
+```
+> MacOS: run `/usr/libexec/java_home` to locate your $JAVA_HOME dir.
+
+Once the ssl certificate has been added, start your UPS setting `-Dcustom.aerogear.fcm.push.host` and `-Dcustom.aerogear.apns.push.host` with the proper values:
 ```
 path/to/jboss/bin/standalone.sh -b 0.0.0.0 --server-config=standalone-full.xml -Dcustom.aerogear.fcm.push.host=http://localhost:3000/fcm/send -Dcustom.aerogear.apns.push.host=127.0.0.1
 ```
@@ -43,6 +54,7 @@ Next step is run the actual load tests. Firstly install Artillery:
 ```
 npm install -g artillery
 ```
+
 Then download the ups-artillery.yml file and simply run it:
 ```
 artillery run ups-artillery.yml
