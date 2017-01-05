@@ -7,8 +7,8 @@ import org.jboss.aerogear.unifiedpush.api.AndroidVariant;
  */
 public class AndroidVariantBuilder extends VariantBuilder<AndroidVariantBuilder, AndroidVariant>{
 
-    private String projectNumber = null;
-    private String googleKey = null;
+    private String projectNumber;
+    private String googleKey;
 
     AndroidVariantBuilder() {
         super();

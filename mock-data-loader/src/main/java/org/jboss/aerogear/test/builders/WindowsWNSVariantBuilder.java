@@ -7,8 +7,8 @@ import org.jboss.aerogear.unifiedpush.api.WindowsWNSVariant;
  */
 public class WindowsWNSVariantBuilder extends VariantBuilder<WindowsWNSVariantBuilder, WindowsWNSVariant> {
 
-    private String sid = null;
-    private String clientSecret = null;
+    private String sid;
+    private String clientSecret;
 
     WindowsWNSVariantBuilder() {
     }

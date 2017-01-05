@@ -13,7 +13,7 @@ import org.jboss.aerogear.unifiedpush.api.*;
 import java.util.UUID;
 
 /**
- * Created by ziccardi on 20/12/2016.
+ * Utility class to create mock data into the UPS server
  */
 public class MockDataLoader {
 
@@ -40,6 +40,9 @@ public class MockDataLoader {
 
     private static LoggerThread logger = null;
 
+    /**
+     * Logger thread. This is used only to show some progress in the old fashion cli way
+     */
     private static class LoggerThread extends Thread {
 
         private int totalApps;
@@ -62,11 +65,17 @@ public class MockDataLoader {
         private int currentToken = 0;
         private int failedToken = 0;
 
+        /**
+         * Ends the polling loop
+         */
         public void shutdown() {
             keepPolling = false;
         }
 
-
+        /**
+         * Increments the count of elaborated variants for the current app
+         * @param failed if <code>true</code> increments the counter for failed variant creation
+         */
         public synchronized void variantElaborated(boolean failed) {
             if (failed) {
                 failedVariants ++;
@@ -75,6 +84,10 @@ public class MockDataLoader {
             }
         }
 
+        /**
+         * Increments the count of elaborated tokens for the current app
+         * @param failed if <code>true</code> increments the counter for failed tokens creation
+         */
         public synchronized void tokenElaborated(boolean failed) {
             if (failed) {
                 failedToken ++;
@@ -83,9 +96,12 @@ public class MockDataLoader {
             }
         }
 
-
+        /**
+         * Increments the count of elaborated apps
+         * @param failed if <code>true</code> increments the counter for failed apps creation
+         */
         public synchronized  void appElaborated(boolean failed) {
-            System.out.printf("\n");
+            System.out.println();
             if (failed) {
                 currentAppFailed ++;
             } else {
@@ -94,11 +110,17 @@ public class MockDataLoader {
             reset();
         }
 
+        /**
+         * Resets the counters for tokens and variants
+         */
         private synchronized void reset() {
             printUpdate();
             currentToken = currentVariant = failedToken = failedVariants = 0;
         }
 
+        /**
+         * Print a progress update
+         */
         private synchronized void printUpdate() {
             System.out.printf("\rApps created/failed/total: %3d/%3d/%3d - Variants created/failed/total: %3d/%3d/%3d - Tokens created/failed/total: %5d/%5d/%5d",
                 currentAppProgress, currentAppFailed, totalApps,
@@ -106,6 +128,9 @@ public class MockDataLoader {
                 currentToken, failedToken, totalTokens * totalVariants);
         }
 
+        /**
+         * Polls for updates
+         */
         @Override
         public void run() {
             while (keepPolling) {
@@ -116,11 +141,14 @@ public class MockDataLoader {
                     throw new IllegalStateException(e);
                 }
             }
-            System.out.printf("\n");
+            System.out.println();
         }
     }
 
-
+    /**
+     * Generate a unique token id for android devices
+     * @return the token id
+     */
     private static String generateAndroidToken() {
 
         String raw = UUID.randomUUID().toString() + UUID.randomUUID().toString() + UUID.randomUUID().toString() + UUID.randomUUID().toString();
@@ -129,6 +157,10 @@ public class MockDataLoader {
         return raw;
     }
 
+    /**
+     * Generate a unique token id for ios devices
+     * @return teh token id
+     */
     private static String generateiOSToken() {
 
         String raw = UUID.randomUUID().toString() + UUID.randomUUID().toString();
@@ -137,7 +169,14 @@ public class MockDataLoader {
         return raw;
     }
 
-
+    /**
+     * Generate the tokens
+     * @param aerogearAdminService aerogear admin interface
+     * @param variantId the variant id for this token
+     * @param variandSecret teh variant secret
+     * @param count Number of tokens to be generated
+     * @throws Exception on any error
+     */
     private static void generateTokens(final AerogearAdminService aerogearAdminService, final String variantId, final String variandSecret, final int count) throws Exception {
 
         final String DEVICE_ALIAS = "TEST_TOKEN";
@@ -149,8 +188,6 @@ public class MockDataLoader {
                 installation.setDeviceToken(generateAndroidToken());
                 installation.setAlias(DEVICE_ALIAS);
 
-                //System.out.printf ("[INFO] - Registering device for %s:%s\n", variantId, variandSecret);
-
                 aerogearAdminService.registerDevice(installation, variantId, variandSecret);
                 logger.tokenElaborated(false);
             } catch (Exception e) {
@@ -159,6 +196,13 @@ public class MockDataLoader {
         }
     }
 
+    /**
+     * Gneerate variants for the given push application
+     * @param appId the push application id
+     * @param appName the application name
+     * @param cmd parameters received on the command line
+     * @throws Exception on any error
+     */
     private static void generateVariants(final String appId, final String appName, final CommandLine cmd) throws Exception {
         for (int variantNumber = 0; variantNumber < getIntOptionValue(cmd, OPTION_VARIANTS); variantNumber++) {
 
@@ -166,7 +210,7 @@ public class MockDataLoader {
             String variantSecret = UUID.randomUUID().toString();
 
             Variant v = VariantBuilder.<AndroidVariantBuilder>forVariant(VariantType.ANDROID)
-                .withVariantId(variantID) // first variant
+                .withVariantId(variantID)
                 .withDescription(String.format(VARIANT_DESC_PATTERN, variantNumber, appName))
                 .withDeveloper(VARIANT_DEVELOPER)
                 .withId(variantID)
@@ -177,18 +221,21 @@ public class MockDataLoader {
                 .build();
 
             try {
-                //System.out.printf("[INFO] - Creating variant. ID: %s\n", variantID);
                 DefaultAerogearAdminService aerogearAdminService = getAdminService(cmd);
                 v = aerogearAdminService.createVariant(v, appId);
                 logger.variantElaborated(false);
                 generateTokens(aerogearAdminService, v.getVariantID(), v.getSecret(), getIntOptionValue(cmd, OPTION_TOKENS));
             } catch (Exception e) {
                 logger.variantElaborated(true);
-                //System.out.printf("[ERROR] - Failed creating variant. ID: %s\n", variantID);
             }
         }
     }
 
+    /**
+     * Logs in into the UPS amdin console
+     * @param cmd parsed command line
+     * @return admin interface
+     */
     private static DefaultAerogearAdminService getAdminService(final CommandLine cmd) {
         PushServer pushServer = new PushServer(cmd.getOptionValue(OPTION_URL, DEFAULT_URL));
         pushServer.setKeycloakCredentials(cmd.getOptionValue(OPTION_USERNAME), cmd.getOptionValue(OPTION_PASSWORD), cmd.getOptionValue(OPTION_CLIENTID, DEFAULT_CLIENT_ID));
@@ -196,6 +243,11 @@ public class MockDataLoader {
         return new DefaultAerogearAdminService(pushServer);
     }
 
+    /**
+     * Generate push applications accoring to received command line parameters
+     * @param cmd parsed command line
+     * @throws Exception on any error
+     */
     private static void generateApplications(final CommandLine cmd) throws Exception {
 
         for (int i = 0; i < getIntOptionValue(cmd, OPTION_APPS); i++) {
@@ -223,6 +275,13 @@ public class MockDataLoader {
         }
     }
 
+    /**
+     * Return a command line parameter as int
+     * @param cmd parsed command line
+     * @param optionName option to be returned
+     * @return the option value
+     * @throws ParseException on any error parsing the option
+     */
     private static int getIntOptionValue(final CommandLine cmd, final String optionName) throws ParseException {
         return ((Number) cmd.getParsedOptionValue(optionName)).intValue();
     }

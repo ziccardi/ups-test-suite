@@ -7,11 +7,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Created by ziccardi on 20/12/2016.
+ * Builder for push applications
  */
 public class PushApplicationBuilder {
 
+    /**
+     * Temporary push application object used to store values
+     */
     private final PushApplication pushApplication;
+
     private final List<Variant> variants;
 
     private PushApplicationBuilder(final String id, final String name) {
@@ -19,12 +23,12 @@ public class PushApplicationBuilder {
         this.pushApplication.setId(id);
         this.pushApplication.setName(name);
 
-        this.variants = new ArrayList<Variant>();
+        this.variants = new ArrayList<>();
     }
 
     private PushApplicationBuilder(final PushApplication pushApplication) {
         this.pushApplication = pushApplication;
-        this.variants = pushApplication.getVariants() != null ? pushApplication.getVariants() : new ArrayList<Variant>();
+        this.variants = pushApplication.getVariants() != null ? pushApplication.getVariants() : new ArrayList<>();
     }
 
     public static PushApplicationBuilder forApplication(final String id, final String name) {
@@ -60,35 +64,12 @@ public class PushApplicationBuilder {
     private Variant cloneVariant(Variant variant) throws Exception {
         Variant ret = variant.getClass().newInstance();
 
-//        switch (variant.getType()) {
-//            case ADM:
-//                ret = new AdmVariant();
-//                break;
-//            case ANDROID:
-//                ret = new AndroidVariant();
-//                break;
-//            case IOS:
-//                ret = new iOSVariant();
-//                break;
-//            case SIMPLE_PUSH:
-//                ret = new SimplePushVariant();
-//                break;
-//            case WINDOWS_MPNS:
-//                ret = new WindowsMPNSVariant();
-//                break;
-//            case WINDOWS_WNS:
-//                ret = new WindowsWNSVariant();
-//                break;
-//            default:
-//                throw new IllegalStateException("Unknown variant type: " + variant.getType());
-//        }
-
         BeanUtils.copyProperties(ret, variant);
         return ret;
     }
 
     private List<Variant> cloneVariants(List<Variant> variants) throws Exception {
-        List<Variant> ret = new ArrayList<Variant>();
+        List<Variant> ret = new ArrayList<>();
         for (Variant variant : variants) {
             ret.add(cloneVariant(variant));
         }
@@ -96,7 +77,7 @@ public class PushApplicationBuilder {
         return ret;
     }
 
-    public PushApplication build(){
+    public PushApplication build() {
 
         // By contract, built object must be a different object on every invocation
         PushApplication ret = new PushApplication();
