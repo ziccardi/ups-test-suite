@@ -15,7 +15,7 @@ mvn clean install
 uncompress the produced archive in a directory of your choice:
 
 ```bash
-tar xvfz target/aerogear-mock-data-loader-1.0-SNAPSHOT-bin.zip
+tar xvfz target/aerogear-mock-data-loader-1.0.0-SNAPSHOT-bin.zip
 ```
 
 Run the script:
