@@ -262,7 +262,7 @@ public class MockDataLoader {
                     .withDescription(String.format(DESCRIPTION_PATTERN, i))
                     .withDeveloper(String.format(DEVELOPER_PATTERN, i))
                     .withMasterSecret(MASTER_SECRET)
-                    .withPushApplicationID(String.format(PUSHAPPID_PATTERN, i));
+                    .withPushApplicationID(appId);
 
                 PushApplication app = getAdminService(cmd).createPushApplication(builder.build());
                 logger.appElaborated(false);
