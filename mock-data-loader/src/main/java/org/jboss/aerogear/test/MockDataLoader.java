@@ -9,6 +9,8 @@ import org.jboss.aerogear.test.builders.AndroidVariantBuilder;
 import org.jboss.aerogear.test.builders.PushApplicationBuilder;
 import org.jboss.aerogear.test.builders.VariantBuilder;
 import org.jboss.aerogear.unifiedpush.api.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.UUID;
 
@@ -16,6 +18,8 @@ import java.util.UUID;
  * Utility class to create mock data into the UPS server
  */
 public class MockDataLoader {
+
+    static final Logger LOG = LoggerFactory.getLogger(MockDataLoader.class);
 
     private static final String OPTION_APPS = "apps";
     private static final String OPTION_TOKENS = "tokens";
@@ -76,8 +80,9 @@ public class MockDataLoader {
          * Increments the count of elaborated variants for the current app
          * @param failed if <code>true</code> increments the counter for failed variant creation
          */
-        public synchronized void variantElaborated(boolean failed) {
+        public synchronized void variantElaborated(boolean failed, Throwable thr) {
             if (failed) {
+                LOG.error("Failure creating variant: {}", new Object[]{thr.getMessage()}, thr);
                 failedVariants ++;
             } else {
                 currentVariant++;
@@ -88,8 +93,9 @@ public class MockDataLoader {
          * Increments the count of elaborated tokens for the current app
          * @param failed if <code>true</code> increments the counter for failed tokens creation
          */
-        public synchronized void tokenElaborated(boolean failed) {
+        public synchronized void tokenElaborated(boolean failed, Throwable thr) {
             if (failed) {
+                LOG.error("Failure creating token: {}", new Object[]{thr.getMessage()}, thr);
                 failedToken ++;
             } else {
                 currentToken++;
@@ -100,9 +106,10 @@ public class MockDataLoader {
          * Increments the count of elaborated apps
          * @param failed if <code>true</code> increments the counter for failed apps creation
          */
-        public synchronized  void appElaborated(boolean failed) {
+        public synchronized  void appElaborated(boolean failed, Throwable thr) {
             System.out.println();
             if (failed) {
+                LOG.error("Failure creating app: {}", new Object[]{thr.getMessage()}, thr);
                 currentAppFailed ++;
             } else {
                 currentAppProgress++;
@@ -189,9 +196,9 @@ public class MockDataLoader {
                 installation.setAlias(DEVICE_ALIAS);
 
                 aerogearAdminService.registerDevice(installation, variantId, variandSecret);
-                logger.tokenElaborated(false);
+                logger.tokenElaborated(false, null);
             } catch (Exception e) {
-                logger.tokenElaborated(true);
+                logger.tokenElaborated(true, e);
             }
         }
     }
@@ -223,10 +230,10 @@ public class MockDataLoader {
             try {
                 DefaultAerogearAdminService aerogearAdminService = getAdminService(cmd);
                 v = aerogearAdminService.createVariant(v, appId);
-                logger.variantElaborated(false);
+                logger.variantElaborated(false, null);
                 generateTokens(aerogearAdminService, v.getVariantID(), v.getSecret(), getIntOptionValue(cmd, OPTION_TOKENS));
             } catch (Exception e) {
-                logger.variantElaborated(true);
+                logger.variantElaborated(true, e);
             }
         }
     }
@@ -265,12 +272,12 @@ public class MockDataLoader {
                     .withPushApplicationID(appId);
 
                 PushApplication app = getAdminService(cmd).createPushApplication(builder.build());
-                logger.appElaborated(false);
+                logger.appElaborated(false, null);
 
                 generateVariants(app.getPushApplicationID(), app.getName(), cmd);
 
             } catch (AerogearHelperException re) {
-                logger.appElaborated(true);
+                logger.appElaborated(true, re);
             }
         }
     }
