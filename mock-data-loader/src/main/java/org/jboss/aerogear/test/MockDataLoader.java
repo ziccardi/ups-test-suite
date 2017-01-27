@@ -12,6 +12,7 @@ import org.jboss.aerogear.unifiedpush.api.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.*;
 import java.util.UUID;
 
 /**
@@ -32,7 +33,6 @@ public class MockDataLoader {
     private static final String DEFAULT_CLIENT_ID = "unified-push-server-js";
     private static final String DEFAULT_URL = "http://localhost:8080";
 
-    private static final String PUSHAPPID_PATTERN = "PUSHAPPID_%d";
     private static final String APPNAME_PATTERN = "Test App %d";
     private static final String DEVELOPER_PATTERN = "Developer %d";
     private static final String DESCRIPTION_PATTERN = "Test App %d";
@@ -42,114 +42,18 @@ public class MockDataLoader {
     private static final String VARIANT_DEVELOPER = "Mock Developer";
     private static final String VARIANT_NAME_PATTERN = "Variant-%s-%d";
 
-    private static LoggerThread logger = null;
+    private final LoggerThread logger;
 
-    /**
-     * Logger thread. This is used only to show some progress in the old fashion cli way
-     */
-    private static class LoggerThread extends Thread {
+    private final CSV csvFile;
 
-        private int totalApps;
-        private int totalVariants;
-        private int totalTokens;
+    MockDataLoader(final LoggerThread lt) {
+        this.csvFile = CSV.NOOP.INSTANCE;
+        this.logger = lt;
+    }
 
-        private boolean keepPolling = true;
-
-        public LoggerThread(final int totalApps, final int totalVariants, final int totalTokens) {
-            LoggerThread.this.totalApps = totalApps;
-            LoggerThread.this.totalVariants = totalVariants;
-            LoggerThread.this.totalTokens = totalTokens;
-        }
-
-        private int currentAppProgress = 0;
-        private int currentAppFailed = 0;
-
-        private int currentVariant = 0;
-        private int failedVariants = 0;
-        private int currentToken = 0;
-        private int failedToken = 0;
-
-        /**
-         * Ends the polling loop
-         */
-        public void shutdown() {
-            keepPolling = false;
-        }
-
-        /**
-         * Increments the count of elaborated variants for the current app
-         * @param failed if <code>true</code> increments the counter for failed variant creation
-         */
-        public synchronized void variantElaborated(boolean failed, Throwable thr) {
-            if (failed) {
-                LOG.error("Failure creating variant: {}", new Object[]{thr.getMessage()}, thr);
-                failedVariants ++;
-            } else {
-                currentVariant++;
-            }
-        }
-
-        /**
-         * Increments the count of elaborated tokens for the current app
-         * @param failed if <code>true</code> increments the counter for failed tokens creation
-         */
-        public synchronized void tokenElaborated(boolean failed, Throwable thr) {
-            if (failed) {
-                LOG.error("Failure creating token: {}", new Object[]{thr.getMessage()}, thr);
-                failedToken ++;
-            } else {
-                currentToken++;
-            }
-        }
-
-        /**
-         * Increments the count of elaborated apps
-         * @param failed if <code>true</code> increments the counter for failed apps creation
-         */
-        public synchronized  void appElaborated(boolean failed, Throwable thr) {
-            System.out.println();
-            if (failed) {
-                LOG.error("Failure creating app: {}", new Object[]{thr.getMessage()}, thr);
-                currentAppFailed ++;
-            } else {
-                currentAppProgress++;
-            }
-            reset();
-        }
-
-        /**
-         * Resets the counters for tokens and variants
-         */
-        private synchronized void reset() {
-            printUpdate();
-            currentToken = currentVariant = failedToken = failedVariants = 0;
-        }
-
-        /**
-         * Print a progress update
-         */
-        private synchronized void printUpdate() {
-            System.out.printf("\rApps created/failed/total: %3d/%3d/%3d - Variants created/failed/total: %3d/%3d/%3d - Tokens created/failed/total: %5d/%5d/%5d",
-                currentAppProgress, currentAppFailed, totalApps,
-                currentVariant, failedVariants, totalVariants,
-                currentToken, failedToken, totalTokens * totalVariants);
-        }
-
-        /**
-         * Polls for updates
-         */
-        @Override
-        public void run() {
-            while (keepPolling) {
-                try {
-                    Thread.sleep(100);
-                    printUpdate();
-                } catch (InterruptedException e) {
-                    throw new IllegalStateException(e);
-                }
-            }
-            System.out.println();
-        }
+    MockDataLoader(final LoggerThread lt, String csvPath) throws IOException {
+        this.csvFile = new CSV(csvPath, "VARIANT_ID", "TOKEN_ALIAS", "TOKEN_ID");
+        this.logger = lt;
     }
 
     /**
@@ -176,30 +80,37 @@ public class MockDataLoader {
         return raw;
     }
 
+    private void generateTokens(final CommandLine cmd, final String variantId, final String variantSecret, final int count) throws Exception {
+        generateTokens(getAdminService(cmd), variantId, variantSecret, count);
+    }
+
     /**
      * Generate the tokens
      * @param aerogearAdminService aerogear admin interface
-     * @param variantId the variant id for this token
-     * @param variandSecret teh variant secret
+     * @param variantId The variant id
+     * @param variantSecret the variant secret
      * @param count Number of tokens to be generated
      * @throws Exception on any error
      */
-    private static void generateTokens(final AerogearAdminService aerogearAdminService, final String variantId, final String variandSecret, final int count) throws Exception {
-
-        final String DEVICE_ALIAS = "TEST_TOKEN";
+    private void generateTokens(final AerogearAdminService aerogearAdminService, final String variantId, final String variantSecret, final int count) throws Exception {
 
         for (int i = 0; i < count; i++) {
-
+            String DEVICE_ALIAS = UUID.randomUUID().toString();
             try {
                 Installation installation = new Installation();
                 installation.setDeviceToken(generateAndroidToken());
                 installation.setAlias(DEVICE_ALIAS);
 
-                aerogearAdminService.registerDevice(installation, variantId, variandSecret);
+                installation = aerogearAdminService.registerDevice(installation, variantId, variantSecret);
                 logger.tokenElaborated(false, null);
+
+                csvFile.addLine(variantId, installation.getAlias(), installation.getId());
             } catch (Exception e) {
                 logger.tokenElaborated(true, e);
             }
+
+
+
         }
     }
 
@@ -210,7 +121,7 @@ public class MockDataLoader {
      * @param cmd parameters received on the command line
      * @throws Exception on any error
      */
-    private static void generateVariants(final String appId, final String appName, final CommandLine cmd) throws Exception {
+    private void generateVariants(final String appId, final String appName, final CommandLine cmd) throws Exception {
         for (int variantNumber = 0; variantNumber < getIntOptionValue(cmd, OPTION_VARIANTS); variantNumber++) {
 
             String variantID = UUID.randomUUID().toString();
@@ -231,6 +142,7 @@ public class MockDataLoader {
                 DefaultAerogearAdminService aerogearAdminService = getAdminService(cmd);
                 v = aerogearAdminService.createVariant(v, appId);
                 logger.variantElaborated(false, null);
+
                 generateTokens(aerogearAdminService, v.getVariantID(), v.getSecret(), getIntOptionValue(cmd, OPTION_TOKENS));
             } catch (Exception e) {
                 logger.variantElaborated(true, e);
@@ -243,7 +155,7 @@ public class MockDataLoader {
      * @param cmd parsed command line
      * @return admin interface
      */
-    private static DefaultAerogearAdminService getAdminService(final CommandLine cmd) {
+    private DefaultAerogearAdminService getAdminService(final CommandLine cmd) {
         PushServer pushServer = new PushServer(cmd.getOptionValue(OPTION_URL, DEFAULT_URL));
         pushServer.setKeycloakCredentials(cmd.getOptionValue(OPTION_USERNAME), cmd.getOptionValue(OPTION_PASSWORD), cmd.getOptionValue(OPTION_CLIENTID, DEFAULT_CLIENT_ID));
 
@@ -255,7 +167,7 @@ public class MockDataLoader {
      * @param cmd parsed command line
      * @throws Exception on any error
      */
-    private static void generateApplications(final CommandLine cmd) throws Exception {
+    private void generateApplications(final CommandLine cmd) throws Exception {
 
         for (int i = 0; i < getIntOptionValue(cmd, OPTION_APPS); i++) {
 
@@ -329,6 +241,10 @@ public class MockDataLoader {
 
     }
 
+    private void shutdown() {
+        this.csvFile.close();
+    }
+
 
     public static void main(String[] args) throws Exception {
 
@@ -340,6 +256,7 @@ public class MockDataLoader {
         options.addOption(Option.builder("p").longOpt(OPTION_PASSWORD).hasArg(true).argName("password").desc("Username to be used to authenticate to the UPS").required(true).build());
         options.addOption(Option.builder("c").longOpt(OPTION_CLIENTID).hasArg(true).argName("id").desc("Client id used to create the apps. Defaults to <" + DEFAULT_CLIENT_ID + ">").required(false).build());
         options.addOption(Option.builder("U").longOpt(OPTION_URL).hasArg(true).argName("UPS URL").desc("URL to the UPS server. Defaults to <" + DEFAULT_URL + ">").required(false).build());
+        options.addOption(Option.builder("g").longOpt("generateCsv").hasArg(true).argName("CSV FILE").desc("Generates a CSV fail containing: variantid, token alias and tokenid").required(false).build());
 
         CommandLineParser parser = new DefaultParser();
 
@@ -348,22 +265,32 @@ public class MockDataLoader {
 
             validateCommandLine(cmd);
 
-            logger = new LoggerThread(getIntOptionValue(cmd, OPTION_APPS, 0), getIntOptionValue(cmd, OPTION_VARIANTS, 0), getIntOptionValue(cmd, OPTION_TOKENS));
+            LoggerThread logger = new LoggerThread(LOG, getIntOptionValue(cmd, OPTION_APPS, 0), getIntOptionValue(cmd, OPTION_VARIANTS, 0), getIntOptionValue(cmd, OPTION_TOKENS));
             logger.start();
+
+            final MockDataLoader mockDataLoader;
+
+            if (cmd.hasOption("g")) {
+                mockDataLoader = new MockDataLoader(logger, cmd.getOptionValue("g"));
+            } else {
+                mockDataLoader = new MockDataLoader(logger);
+            }
 
             try {
                 if (cmd.hasOption(OPTION_APPS)) {
-                    generateApplications(cmd);
+                    mockDataLoader.generateApplications(cmd);
                 } else {
                     // Only tokens must be generated
                     final String[] tokenOptionValues = cmd.getOptionValues(OPTION_TOKENS);
                     int tokenCount = Integer.parseInt(tokenOptionValues[0]);
                     final String[] idAndSecret = tokenOptionValues[1].split(":");
-                    generateTokens(getAdminService(cmd), idAndSecret[0], idAndSecret[1], tokenCount);
+
+                    mockDataLoader.generateTokens(cmd, idAndSecret[0], idAndSecret[1], tokenCount);
                 }
 
             } finally {
                 logger.shutdown();
+                mockDataLoader.shutdown();
             }
 
         } catch (Exception e) {
