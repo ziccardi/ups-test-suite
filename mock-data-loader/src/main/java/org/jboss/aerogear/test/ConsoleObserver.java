@@ -2,25 +2,14 @@ package org.jboss.aerogear.test;
 
 import org.slf4j.Logger;
 
-/**
- * Logger thread. This is used only to show some progress in the old fashion cli way
- */
-public class LoggerThread extends Thread {
+import java.util.Observable;
+import java.util.Observer;
+
+public class ConsoleObserver implements Observer {
 
     private int totalApps;
     private int totalVariants;
     private int totalTokens;
-
-    private boolean keepPolling = true;
-
-    private final Logger LOG;
-
-    public LoggerThread(Logger logger, final int totalApps, final int totalVariants, final int totalTokens) {
-        LoggerThread.this.totalApps = totalApps;
-        LoggerThread.this.totalVariants = totalVariants;
-        LoggerThread.this.totalTokens = totalTokens;
-        this.LOG = logger;
-    }
 
     private int currentAppProgress = 0;
     private int currentAppFailed = 0;
@@ -30,11 +19,13 @@ public class LoggerThread extends Thread {
     private int currentToken = 0;
     private int failedToken = 0;
 
-    /**
-     * Ends the polling loop
-     */
-    public void shutdown() {
-        keepPolling = false;
+    private final Logger LOG;
+
+    public ConsoleObserver(Logger logger, final int totalApps, final int totalVariants, final int totalTokens) {
+        this.totalApps = totalApps;
+        this.totalVariants = totalVariants;
+        this.totalTokens = totalTokens;
+        this.LOG = logger;
     }
 
     /**
@@ -48,6 +39,7 @@ public class LoggerThread extends Thread {
         } else {
             currentVariant++;
         }
+        printUpdate();
     }
 
     /**
@@ -61,6 +53,7 @@ public class LoggerThread extends Thread {
         } else {
             currentToken++;
         }
+        printUpdate();
     }
 
     /**
@@ -68,13 +61,14 @@ public class LoggerThread extends Thread {
      * @param failed if <code>true</code> increments the counter for failed apps creation
      */
     public synchronized  void appElaborated(boolean failed, Throwable thr) {
-        System.out.println();
         if (failed) {
             LOG.error("Failure creating app: {}", new Object[]{thr.getMessage()}, thr);
             currentAppFailed ++;
         } else {
             currentAppProgress++;
         }
+        printUpdate();
+        System.out.println();
         reset();
     }
 
@@ -96,19 +90,33 @@ public class LoggerThread extends Thread {
             currentToken, failedToken, totalTokens * totalVariants);
     }
 
-    /**
-     * Polls for updates
-     */
     @Override
-    public void run() {
-        while (keepPolling) {
-            try {
-                Thread.sleep(100);
-                printUpdate();
-            } catch (InterruptedException e) {
-                throw new IllegalStateException(e);
+    public void update(Observable o, Object arg) {
+        if (o instanceof MockTokenLoader) {
+            if (arg instanceof Exception) {
+                tokenElaborated(true, (Exception) arg);
+                return;
+            } else {
+                tokenElaborated(false, null);
             }
         }
-        System.out.println();
+
+        if (o instanceof MockVariantLoader) {
+            if (arg instanceof Exception) {
+                variantElaborated(true, (Exception) arg);
+                return;
+            } else {
+                variantElaborated(false, null);
+            }
+        }
+
+        if (o instanceof MockAppLoader) {
+            if (arg instanceof Exception) {
+                appElaborated(true, (Exception) arg);
+                return;
+            } else {
+                appElaborated(false, null);
+            }
+        }
     }
 }

@@ -86,7 +86,7 @@
                     <repositoryLayout>flat</repositoryLayout>
                     <programs>
                         <program>
-                            <mainClass>org.jboss.aerogear.test.MockDataLoader</mainClass>
+                            <mainClass>org.jboss.aerogear.test.Main</mainClass>
                             <name>mock-data-loader.sh</name>
                         </program>
                     </programs>
