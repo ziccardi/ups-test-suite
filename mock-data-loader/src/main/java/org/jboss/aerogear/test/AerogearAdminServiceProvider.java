@@ -16,6 +16,13 @@ public class AerogearAdminServiceProvider {
 
     private DefaultAerogearAdminService cachedInstance = null;
 
+    public AerogearAdminServiceProvider(final String url) {
+        this.url = url;
+        this.clientid = null;
+        this.username = null;
+        this.password = null;
+    }
+
     /**
      * Builds a new provider
      * @param url URL to the aerogear UPS server
@@ -50,7 +57,10 @@ public class AerogearAdminServiceProvider {
             return cachedInstance;
         }
         PushServer pushServer = new PushServer(url);
-        pushServer.setKeycloakCredentials(username, password, clientid);
+
+        if (username != null) {
+            pushServer.setKeycloakCredentials(username, password, clientid);
+        }
 
         cachedInstance = new DefaultAerogearAdminService(pushServer);
 

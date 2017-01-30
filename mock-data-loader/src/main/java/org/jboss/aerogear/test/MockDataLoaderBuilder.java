@@ -12,13 +12,10 @@ public class MockDataLoaderBuilder {
     /**
      * Creates a new builder for {@link MockTokenLoader} objects.
      * @param url URL to the UPS server
-     * @param username username for the UPS server
-     * @param password password for the UPS server
-     * @param clientId clientId for the UPS server
      * @return the builder instance
      */
-    public static MockTokenLoaderBuilder forMockTokenLoader(final String url, final String username, final String password, final String clientId) {
-        return new MockTokenLoaderBuilder(new AerogearAdminServiceProvider(url, clientId, username, password));
+    public static MockTokenLoaderBuilder forMockTokenLoader(final String url) {
+        return new MockTokenLoaderBuilder(new AerogearAdminServiceProvider(url));
     }
 
     /**
@@ -212,10 +209,7 @@ public class MockDataLoaderBuilder {
 
                 return MockDataLoaderBuilder
                     .forMockTokenLoader(
-                        cli.getOptionValue(ICliUtils.OPTION_URL, ICliUtils.DEFAULT_URL),
-                        cli.getOptionValue(ICliUtils.OPTION_USERNAME),
-                        cli.getOptionValue(ICliUtils.OPTION_PASSWORD),
-                        cli.getOptionValue(ICliUtils.OPTION_CLIENTID, ICliUtils.DEFAULT_CLIENT_ID))
+                        cli.getOptionValue(ICliUtils.OPTION_URL, ICliUtils.DEFAULT_URL))
                     .with(idAndSecret[0], idAndSecret[1], tokenCount)
                     .withCsvFile(cli.getOptionValue(ICliUtils.OPTION_CSV))
                     .withTokenAlias(cli.getOptionValue(ICliUtils.OPTION_ALIAS))
